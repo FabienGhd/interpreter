@@ -41,8 +41,12 @@ object Interpreter {
    * @return m(v), c'est-à-dire la valeur de la variable v dans la mémoire mem,
    * la valeur par défaut si la variable v n'est pas présente dans la mémoire mem
    */
-  // TODO TP2
-  def lookUp(v: Variable, mem: Memory): Value = ???
+  def lookUp(v: Variable, mem: Memory): Value = {
+    mem match {
+      case Nil => NlValue //default value
+      case e :: tail => if(v == e._1) e._2 else lookUp(v, tail)
+    }
+  }
 
   /**
    * @param v : une variable

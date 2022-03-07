@@ -54,8 +54,13 @@ object Interpreter {
    * @param mem : une mémoire
    * @return la mémoire modifiée par l'affectation [v->d]
    */
-  // TODO TP2
-  def assign(v: Variable, d: Value, mem: Memory): Memory = ???
+  def assign(v: Variable, d: Value, mem: Memory): Memory = {
+    mem match {
+      case Nil => (v,d) :: Nil 
+      case e :: tail => if(v == e._1) ((v,d) :: tail) //prend en compte la nouvelle valeur de v dans l'affectation [v->d].
+                        else (e :: assign(v, d, tail)) 
+    }
+  }
 
   /**
    *  TRAITEMENT DES EXPRESSIONS DU LANGAGE WHILE

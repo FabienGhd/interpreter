@@ -120,9 +120,17 @@ object Interpreter {
       case While(cond, body) =>
         if (interpreterExpr(cond, memory) == NlValue) {
           memory
-        }else {
+        } else {
           interpreterCommand(While(cond,body), interpreterCommands(body, memory))
-        }  
+        }
+      case For(e, body) {
+        if (interpreterExpr(cond, memory) == NlValue) {
+          memory
+        }
+        else {
+          
+        }
+      }
     }
   }
 

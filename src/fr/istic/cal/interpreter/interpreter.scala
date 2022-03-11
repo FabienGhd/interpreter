@@ -2,11 +2,11 @@ package fr.istic.cal.interpreter
 
 /*
  * VEUILLEZ INSCRIRE CI-DESSOUS VOTRE NOM ET VOTRE PRENOM :
- * 
+ *
  * ETUDIANT 1 :
- * 
+ *
  * ETUDIANT 2 :
- * 
+ *
  */
 
 /**
@@ -43,8 +43,8 @@ object Interpreter {
    */
   def lookUp(v: Variable, mem: Memory): Value = {
     mem match {
-      case Nil => NlValue //default value
-      case e :: tail => if(v == e._1) e._2 else lookUp(v, tail)
+      case Nil       => NlValue
+      case e :: tail => if (v == e._1) e._2 else lookUp(v, tail)
     }
   }
 
@@ -56,9 +56,8 @@ object Interpreter {
    */
   def assign(v: Variable, d: Value, mem: Memory): Memory = {
     mem match {
-      case Nil => (v,d) :: Nil 
-      case e :: tail => if(v == e._1) ((v,d) :: tail) //prend en compte la nouvelle valeur de v dans l'affectation [v->d].
-                        else (e :: assign(v, d, tail)) 
+      case Nil       => (v, d) :: Nil
+      case e :: tail => if (e._1 == v) ((v, d) :: tail) else (e :: assign(v, d, tail))
     }
   }
 
@@ -70,8 +69,23 @@ object Interpreter {
    * @param expression : un AST décrivant une expression du langage WHILE
    * @return la valeur de l'expression
    */
-  // TODO TP2
-  def interpreterExpr(expression: Expression, mem: Memory): Value = ???
+  def interpreterExpr(expression: Expression, mem: Memory): Value = {
+    expression match {
+      case Nl         => NlValue
+      case Cst(x)     => CstValue(x)
+      case VarExp(x)  => lookUp(Var(x), mem)
+      case Cons(a, b) => ConsValue(interpreterExpr(a, mem), interpreterExpr(b, mem))
+      case Eq(a, b)   => if (interpreterExpr(a, mem) != interpreterExpr(b, mem)) NlValue else ConsValue(NlValue, NlValue)
+      case Hd(e) => interpreterExpr(e, mem) match {
+        case ConsValue(a, b) => a
+        case _               => NlValue
+      }
+      case Tl(e) => interpreterExpr(e, mem) match {
+        case ConsValue(a, b) => b
+        case _               => NlValue
+      }
+    }
+  }
 
   /**
    * la fonction interpreterExpr ci-dessus calcule la valeur associée à une expression
@@ -81,9 +95,13 @@ object Interpreter {
    * @param value : une valeur du langage WHILE
    * @return l'AST décrivant l'expression de cette valeur
    */
-  // TODO TP2
-  def valueToExpression(value: Value): Expression = ???
-  
+  def valueToExpression(value: Value): Expression = {
+    value match {
+      case NlValue         => Nl
+      case ConsValue(a, b) => Cons(valueToExpression(a), valueToExpression(b))
+      case CstValue(x)     => Cst(x)
+    }
+  }
 
   /**
    *
@@ -95,18 +113,30 @@ object Interpreter {
    * @param memory : une mémoire
    * @return la mémoire après l'interprétation de command
    */
-  // TODO TP2
-  def interpreterCommand(command: Command, memory: Memory): Memory = ???
-  
-  
+  def interpreterCommand(command: Command, memory: Memory): Memory = {
+    command match {
+      case Nop       => memory
+      case Set(v, e) => assign(v, interpreterExpr(e, memory), memory)
+      case While(cond, body) =>
+        if (interpreterExpr(cond, memory) == NlValue) {
+          memory
+        }else {
+          interpreterCommand(While(cond,body), interpreterCommands(body, memory))
+        }  
+    }
+  }
+
   /**
    * @param commands : une liste non vide d'AST décrivant une liste non vide de commandes du langage WHILE
    * @param memory : une mémoire
    * @return la mémoire après l'interprétation de la liste de commandes
    */
-  // TODO TP2
-  def interpreterCommands(commands: List[Command], memory: Memory): Memory = ???
-  
+  def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
+    commands match {
+      case Nil       => memory
+      case c :: tail => interpreterCommands(tail, interpreterCommand(c, memory))
+    }
+  }
 
   /**
    *
@@ -120,7 +150,6 @@ object Interpreter {
    */
   // TODO TP2
   def interpreterMemorySet(vars: List[Variable], vals: List[Value]): Memory = ???
-  
 
   /**
    * @param vars : une liste non vide décrivant les variables de sortie d'un programme du langage WHILE
@@ -137,9 +166,6 @@ object Interpreter {
    */
   // TODO TP2
   def interpreter(program: Program, vals: List[Value]): List[Value] = ???
-  
-  
-  
 
   /**
    * UTILISATION D'UN ANALYSEUR SYNTAXIQUE POUR LE LANGAGE WHILE

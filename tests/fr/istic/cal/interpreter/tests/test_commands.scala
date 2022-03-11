@@ -174,6 +174,34 @@ class TestsCommands {
     // println("was      : " + result)
     assertTrue(expected.forall(a => result.contains(a)) && result.forall(a => expected.contains(a)) && expected.length == result.length)
   }
+  
+  @Test
+  def Test_While_perso(): Unit = {
+    val memory1: Memory = List(
+      (Var("X"), ConsValue(NlValue, ConsValue(NlValue, ConsValue(NlValue, NlValue)))),
+      (Var("Y"), ConsValue(NlValue, ConsValue(NlValue, NlValue))))
+    val expected: Memory = List(
+      (Var("X"), NlValue),
+      (Var("Y"), ConsValue(NlValue, ConsValue(NlValue, NlValue))),
+      (Var("YY"), NlValue),
+      (Var("Z"), ConsValue(NlValue, ConsValue(NlValue, ConsValue(NlValue, ConsValue(NlValue, ConsValue(NlValue, ConsValue(NlValue, NlValue))))))))
+    val result =
+      interpreterCommand(
+        While(
+          VarExp("X"),
+          List(
+            Set(Var("YY"), VarExp("Y")),
+            While(
+              VarExp("YY"),
+              List(
+                Set(Var("Z"), Cons(Nl, VarExp("Z"))),
+                Set(Var("YY"), Tl(VarExp("YY"))))),
+            Set(Var("X"), Tl(VarExp("X"))))),
+        memory1)
+    // println("expected : " + expected)
+    // println("was      : " + result)
+    assertEquals(expected, result)
+  }
 
   @Test
   def Test_interpreterCommand_For_1(): Unit = {

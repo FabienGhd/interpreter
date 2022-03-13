@@ -117,20 +117,24 @@ object Interpreter {
     command match {
       case Nop       => memory
       case Set(v, e) => assign(v, interpreterExpr(e, memory), memory)
-      case While(cond, body) =>
-        if (interpreterExpr(cond, memory) == NlValue) {
-          memory
-        } else {
-          interpreterCommand(While(cond,body), interpreterCommands(body, memory))
-        }
-      case For(e, body) {
-        if (interpreterExpr(cond, memory) == NlValue) {
-          memory
-        }
-        else {
-          
-        }
+      
+      case While(cond, body) => interpreterExpr(cond, memory) match {
+        case NlValue => memory
+        case _       => interpreterCommand(While(cond, body), interpreterCommands(body, memory))
       }
+      
+      case If(cond, e1, e2) => interpreterExpr(cond, memory) match {
+        case NlValue => interpreterCommands(e2, memory)
+        case _       => interpreterCommands(e1, memory)
+      }
+      
+      case For(cond, body) => interpreterExpr(cond, memory) match {
+        case NlValue => memory
+        //TODO: doesn't work
+        case _ => interpreterCommands(body ++
+                  List(For(Tl(valueToExpression(interpreterExpr(cond, memory))), body)), memory)
+      }
+      
     }
   }
 
@@ -142,7 +146,7 @@ object Interpreter {
   def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
     commands match {
       case Nil       => memory
-      case c :: tail => interpreterCommands(tail, interpreterCommand(c, memory))
+      case head :: tail => interpreterCommands(tail, interpreterCommand(head, memory))
     }
   }
 

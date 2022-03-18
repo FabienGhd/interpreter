@@ -123,14 +123,13 @@ object Interpreter {
         case _       => interpreterCommand(While(cond, body), interpreterCommands(body, memory))
       }
       
-      case If(cond, e1, e2) => interpreterExpr(cond, memory) match {
-        case NlValue => interpreterCommands(e2, memory)
-        case _       => interpreterCommands(e1, memory)
+      case If(cond, th, el) => interpreterExpr(cond, memory) match {
+        case NlValue => interpreterCommands(el, memory)
+        case _       => interpreterCommands(th, memory)
       }
       
       case For(cond, body) => interpreterExpr(cond, memory) match {
         case NlValue => memory
-        //TODO: doesn't work
         case _ => interpreterCommands(body ++
                   List(For(Tl(valueToExpression(interpreterExpr(cond, memory))), body)), memory)
       }
@@ -144,8 +143,8 @@ object Interpreter {
    * @return la mémoire après l'interprétation de la liste de commandes
    */
   def interpreterCommands(commands: List[Command], memory: Memory): Memory = {
-    commands match {
-      case Nil       => memory
+    commands match { 
+      case e::Nil       => interpreterCommand(e, memory)
       case head :: tail => interpreterCommands(tail, interpreterCommand(head, memory))
     }
   }
@@ -160,16 +159,24 @@ object Interpreter {
    * @param vals : une liste non vide de valeurs
    * @return une mémoire associant chaque valeur à la variable d'entrée correspondant
    */
-  // TODO TP2
-  def interpreterMemorySet(vars: List[Variable], vals: List[Value]): Memory = ???
+  def interpreterMemorySet(vars: List[Variable], vals: List[Value]): Memory = {
+    (vars, vals) match {
+      case (h1::Nil,h2::Nil) => (h1, h2) :: Nil
+      case (h1::t1, h2::t2) => (h1, h2) :: interpreterMemorySet(t1, t2)
+    }
+  }
 
   /**
    * @param vars : une liste non vide décrivant les variables de sortie d'un programme du langage WHILE
    * @param memory : une mémoire
    * @return la liste des valeurs des variables de sortie
    */
-  // TODO TP2
-  def interpreterMemoryGet(vars: List[Variable], memory: Memory): List[Value] = ???
+  def interpreterMemoryGet(vars: List[Variable], memory: Memory): List[Value] = {
+    vars match {
+      case h :: Nil => lookUp(h, memory) :: Nil
+      case h :: t => lookUp(h, memory) :: interpreterMemoryGet(t, memory)
+    }
+  }
 
   /**
    * @param program : un AST décrivant un programme du langage WHILE
@@ -177,7 +184,11 @@ object Interpreter {
    * @return la liste des valeurs des variables de sortie
    */
   // TODO TP2
-  def interpreter(program: Program, vals: List[Value]): List[Value] = ???
+  def interpreter(program: Program, vals: List[Value]): List[Value] = {
+    program match {
+      case Progr(in, body, out) => interpreterMemoryGet(out, interpreterCommands(body, interpreterMemorySet(in, vals)))
+    }
+  }
 
   /**
    * UTILISATION D'UN ANALYSEUR SYNTAXIQUE POUR LE LANGAGE WHILE
